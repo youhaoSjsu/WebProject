@@ -27,4 +27,5 @@ urlpatterns = [
     path('testdb/', dbOperations.testdb),
     path('signin/', signin, name='signin'),
     path('api/signin/', signInAPI.as_view(), name='apiSignin'),
+    path('test/fakeData/', dbOperations.fakeData),
 ]
