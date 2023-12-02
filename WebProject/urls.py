@@ -18,13 +18,15 @@ from django.contrib import admin
 from django.urls import path
 
 from WebProject import dbOperations
-from WebProject.dbOperations import signInAPI
-from WebProject.views import signin
-
+from WebProject.dbOperations import *
+from WebProject.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('testdb/', dbOperations.testdb),
     path('signin/', signin, name='signin'),
     path('api/signin/', signInAPI.as_view(), name='apiSignin'),
+    path('test/fakeData/', dbOperations.fakeData),
+    path('requestPush/', requestPush, name='requestPush'),
+    path('api/sendPushes/', sendPushes.as_view(), name='apiSendPush')
 ]

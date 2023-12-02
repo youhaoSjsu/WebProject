@@ -27,16 +27,13 @@ class UserProfile(models.Model):
         ('O', 'Other'),
     ]
     gender = models.CharField(max_length=1, choices=gender_choices)
-    hobbies = models.ManyToManyField('Hobby', related_name='user_profiles')
-    events_participated = models.ManyToManyField('Event', related_name='participants')
-
     def __str__(self):
         return f"{self.user.username}'s Profile"
 
 
 class HobbyCate(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    id = models.AutoField(primary_key=True)
+    hobbyCate_id = models.AutoField(primary_key=True)
 
     def __str__(self):
         return self.name
@@ -45,16 +42,39 @@ class HobbyCate(models.Model):
 class Hobby(models.Model):
     name = models.CharField(max_length=100)
     category = models.ForeignKey(HobbyCate, on_delete=models.CASCADE, related_name='hobbies')
+    hobby_id = models.AutoField(primary_key=True)
 
     def __str__(self):
-        return self.name
+        return self.hobby_id
 
 
 class Event(models.Model):
+    event_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     category = models.CharField(max_length=100)
-    time = models.TimeField()
+    time = models.DateTimeField()
     location = models.CharField(max_length=200)
+    description = models.CharField(max_length=2000)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - {self.time}"
+
+
+class EventPush(models.Model):
+    push_id = models.AutoField(primary_key=True)
+    date = models.DateField()
+    event_id = models.IntegerField()
+    user_id = models.IntegerField()
+
+    def __str__(self):
+        return self.push_id
+
+
+class PushRate(models.Model):
+    event_id = models.IntegerField()
+    user_id = models.IntegerField()
+    rate = models.IntegerField()
+    rate_id = models.AutoField(primary_key=True)
+
+    def __str__(self):
+        return self.rate_id

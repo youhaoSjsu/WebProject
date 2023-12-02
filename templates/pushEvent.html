@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="signInApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>events</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+<body ng-controller="SignInController">
+
+    <h2>event</h2>
+
+    <input ng-model="username"/>
+    <button ng-click="getPushes()">get pushes</button>
+
+    <script>
+        angular.module('signInApp', [])
+            .controller('SignInController', ['$scope', '$http', function ($scope, $http) {
+                $scope.formData = {};
+                $scope.username='';
+                $scope.getPushes =function (){
+                     $http({
+                        method: 'POST',
+                        url: '/api/sendPushes/',  // Update this URL to your backend endpoint
+
+                        data: {username : $scope.username}
+                    }).then(function (response) {
+                        $scope.responseMessage = response.data.message;
+                    }, function (error) {
+                        $scope.responseMessage = "An error occurred.";
+                    });
+                }
+
+                $scope.submitForm = function () {
+                    $http({
+                        method: 'POST',
+                        url: '/api/signin/',  // Update this URL to your backend endpoint
+                        data: $scope.formData
+                    }).then(function (response) {
+                        $scope.responseMessage = response.data.message;
+                    }, function (error) {
+                        $scope.responseMessage = "An error occurred.";
+                    });
+                };
+            }]);
+    </script>
+
+</body>
+</html>
