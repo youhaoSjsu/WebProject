@@ -9,15 +9,27 @@
 <body ng-controller="SignInController">
 
     <h2>event</h2>
-
+    <h4>enter the username</h4>
     <input ng-model="username"/>
+    <br>
     <button ng-click="getPushes()">get pushes</button>
+    <br>
+    Div: Message: {% verbatim %}{{ message }}{% endverbatim %}
+    <div ng-repeat="event in events track by $index">
+        <p>{% verbatim %} {{event.event_id}} {% endverbatim %}</p>
+        <p>{% verbatim %}{{event.name}} {% endverbatim %}</p>
+        <p>{% verbatim %} {{event.description}} {% endverbatim %}</p>
+        <p>{% verbatim %} {{event.category}} {% endverbatim %}</p>
+        <p>rate it (0-5) </p>
+        <input type="number"/>
+    </div>
 
     <script>
         angular.module('signInApp', [])
             .controller('SignInController', ['$scope', '$http', function ($scope, $http) {
                 $scope.formData = {};
                 $scope.username='';
+                $scope.events = [];
                 $scope.getPushes =function (){
                      $http({
                         method: 'POST',
@@ -25,7 +37,8 @@
 
                         data: {username : $scope.username}
                     }).then(function (response) {
-                        $scope.responseMessage = response.data.message;
+                        $scope.events = response.data.events;
+                        console.log($scope.events)
                     }, function (error) {
                         $scope.responseMessage = "An error occurred.";
                     });

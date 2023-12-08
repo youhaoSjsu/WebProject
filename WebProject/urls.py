@@ -27,6 +27,8 @@ urlpatterns = [
     path('signin/', signin, name='signin'),
     path('api/signin/', signInAPI.as_view(), name='apiSignin'),
     path('test/fakeData/', dbOperations.fakeData),
+    path('test/fakeRatings/', dbOperations.fakeRating),
+    path('test/fbHobeyPush/', dbOperations.imitationRating),
     path('requestPush/', requestPush, name='requestPush'),
     path('api/sendPushes/', sendPushes.as_view(), name='apiSendPush')
 ]
