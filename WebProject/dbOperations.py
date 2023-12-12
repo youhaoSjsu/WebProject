@@ -170,6 +170,23 @@ class signInAPI(APIView):
             return HttpResponse('false')
 
 
+class TrainedPush(APIView):
+    @csrf_exempt
+    def post(self, request):
+        try:
+            requestName = request.data.get('username')
+            currentUser = User.objects.get(username=requestName)
+            eventList = makePush(currentUser)
+
+            serializer_data = EventSerializer(eventList, many=True).data
+            return Response({"events": serializer_data}, status=status.HTTP_200_OK)
+
+
+
+        except User.DoesNotExist:
+            return HttpResponse('false')
+
+
 class sendPushes(APIView):
     @csrf_exempt
     def post(self, request):
