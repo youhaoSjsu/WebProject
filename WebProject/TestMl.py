@@ -7,7 +7,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from django.db import connection
 from django.core.wsgi import get_wsgi_application
 import os
-from TestModel.models import *
+
 
 # Initialize Django application
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "WebProject.settings")
@@ -29,41 +29,50 @@ def load_data():
                                 "JOIN testmodel_userhobby uh ON p.user_id = uh.user_id "
                                 "JOIN testmodel_hobby h ON uh.hobby_id = h.hobby_id "
                                 "GROUP BY p.rate_id ORDER BY p.rate_id ASC;")
-    columns = ["event_name", "event_category", "event_description", "user_hobby", "user_age", "user_job",
+    columns = ["event_name", "event_category", "event_description", "user_age", "user_job", "user_hobby",
                "rating_score"]
     return pd.DataFrame(result, columns=columns)
 
 
+# def preprocess_data(df):
+#     # Initialize label encoders
+#     le_hobby = LabelEncoder()
+#     le_job = LabelEncoder()
+#     le_category = LabelEncoder()
+#
+#     # Combine text features into one
+#     df['event_text'] = df['event_name'] + ' ' + df['event_category'] + '' + df['event_description']
+#     df['user_profile'] = df['user_hobby'].astype(str) + ' ' + df['user_age'].astype(str) + ' ' + df['user_job'].astype(
+#         str)
+#
+#     # Encode categorical features
+#     df['user_hobby_encoded'] = le_hobby.fit_transform(df['user_hobby'])
+#     df['user_job_encoded'] = le_job.fit_transform(df['user_job'])
+#     df['event_category_encoded'] = le_category.fit_transform(df['event_category'])
+#
+#     return df
+
+
 def preprocess_data(df):
-    # Initialize label encoders
-    le_hobby = LabelEncoder()
-    le_job = LabelEncoder()
-    le_category = LabelEncoder()
-
-    # Combine text features into one
-    df['event_text'] = df['event_name'] + ' ' + df['event_category'] + '' + df['event_description']
-    df['user_profile'] = df['user_hobby'].astype(str) + ' ' + df['user_age'].astype(str) + ' ' + df['user_job'].astype(
-        str)
-
-    # Encode categorical features
-    df['user_hobby_encoded'] = le_hobby.fit_transform(df['user_hobby'])
-    df['user_job_encoded'] = le_job.fit_transform(df['user_job'])
-    df['event_category_encoded'] = le_category.fit_transform(df['event_category'])
-
-    return df
-
-
-def preprocess_data(df):
-    label_encoder = LabelEncoder()
-
-    # Encoding all string columns except 'user_age' and 'rating_score'
-    for col in df.columns:
+    encoders = {}  # Dictionary to store encoders
+    for col in ['event_name', 'event_category', 'event_description', 'user_hobby', 'user_job']:
         if df[col].dtype == 'object':
-            df[col] = label_encoder.fit_transform(df[col])
+            df[col] = df[col].astype(str)  # Ensure data is string
+            df[col] = df[col].fillna('unknown')  # Fill missing values
+            encoders[col] = LabelEncoder()
+            # Add a placeholder for unseen labels
+            all_categories = df[col].unique().tolist() + ['unseen_label']
+            encoders[col].fit(all_categories)
 
-    # Standardizing numerical columns (if needed)
+            df[col] = encoders[col].transform(df[col])
+
     scaler = StandardScaler()
     df['user_age'] = scaler.fit_transform(df[['user_age']])
+
+    # Save each encoder and the scaler
+    for col, encoder in encoders.items():
+        joblib.dump(encoder, f'encoder_{col}.pkl')
+    joblib.dump(scaler, 'scaler_user_age.pkl')
 
     return df
 
@@ -96,5 +105,8 @@ def main():
     joblib.dump(model, 'C:\sjsu\CS156\WebProject\WebProject\mlModel.pkl')
 
 
+
 if __name__ == "__main__":
     main()
+
+
