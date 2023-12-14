@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 
+import joblib
 from django.db import connection
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from semantic_text_similarity.models import WebBertSimilarity
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 from TestModel.models import *
 from rest_framework.views import APIView
@@ -170,14 +172,13 @@ class signInAPI(APIView):
             return HttpResponse('false')
 
 
-class TrainedPush(APIView):
+class trainedPush(APIView):
     @csrf_exempt
     def post(self, request):
         try:
             requestName = request.data.get('username')
             currentUser = User.objects.get(username=requestName)
-            eventList = makePush(currentUser)
-
+            eventList = machineLearningPush(currentUser)
             serializer_data = EventSerializer(eventList, many=True).data
             return Response({"events": serializer_data}, status=status.HTTP_200_OK)
 
@@ -293,3 +294,59 @@ def makePush(user):
     # only push 10 each time
     event_result = event_result[:min(10, len(event_result))]
     return event_result
+
+
+def load_data(user_id, event_id):
+    result = execute_custom_sql(
+        'SELECT e.name, e.category, e.description, u.age, u.job,  GROUP_CONCAT(h.name ORDER BY h.name) AS hobbies from testmodel_event e join testmodel_userprofile u join testmodel_userhobby uh on u.user_id = uh.user_id JOIN testmodel_hobby h ON uh.hobby_id = h.hobby_id  Where u.user_id = %s and e.event_id =%s;',
+        [user_id, event_id])
+    columns = ["event_name", "event_category", "event_description", "user_age", "user_job", "user_hobby"]
+    return pd.DataFrame(result, columns=columns)
+
+
+def preprocess_data_for_prediction(df, encoders, scaler):
+    for col in df.columns:
+        if col in encoders:
+            # Check if each label is in the fitted classes of the encoder
+            mask = ~df[col].isin(encoders[col].classes_)
+            df.loc[mask, col] = 'unseen_label'
+            df[col] = encoders[col].transform(df[col])
+        elif col == 'user_age':
+            df[col] = scaler.transform(df[[col]])
+
+    return df
+
+
+def load_pretrained_encoders_and_scaler():
+    # Load the saved encoders and scaler
+    encoders = {
+        'event_name': joblib.load('C:\sjsu\CS156\WebProject\WebProject\encoder_event_name.pkl'),
+        'event_category': joblib.load('C:\sjsu\CS156\WebProject\WebProject\encoder_event_category.pkl'),
+        'event_description': joblib.load('C:\sjsu\CS156\WebProject\WebProject\encoder_event_description.pkl'),
+        'user_hobby': joblib.load('C:\sjsu\CS156\WebProject\WebProject\encoder_user_hobby.pkl'),
+        'user_job': joblib.load('C:\sjsu\CS156\WebProject\WebProject\encoder_user_job.pkl')
+    }
+    scaler = joblib.load('C:\sjsu\CS156\WebProject\WebProject\scaler_user_age.pkl')
+    return encoders, scaler
+
+
+def machineLearningPush(user):
+    model = joblib.load('C:\sjsu\CS156\WebProject\WebProject\mlModel.pkl')
+    encoders, scaler = load_pretrained_encoders_and_scaler()
+    events = Event.objects.all()
+
+    event_predictions = []
+    for event in events:
+        df = load_data(user.user_id, event.event_id)
+        df_processed = preprocess_data_for_prediction(df, encoders, scaler)
+        prediction = model.predict(df_processed)
+        event_predictions.append((event, prediction[0]))
+
+    event_predictions.sort(key=lambda x: x[1], reverse=True)
+    ## take top five
+    event_predictions = event_predictions[:5]
+    events = []
+    for ep in event_predictions:
+        events.append(ep[0])
+
+    return events

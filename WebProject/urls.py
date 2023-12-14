@@ -30,5 +30,7 @@ urlpatterns = [
     path('test/fakeRatings/', dbOperations.fakeRating),
     path('test/fbHobeyPush/', dbOperations.imitationRating),
     path('requestPush/', requestPush, name='requestPush'),
-    path('api/sendPushes/', sendPushes.as_view(), name='apiSendPush')
+
+    path('api/sendPushes/', sendPushes.as_view(),  name='apiSendPush'),
+    path('requestPush/api/trainedPush/', trainedPush.as_view(), name='apiT'),
 ]

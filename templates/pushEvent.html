@@ -24,6 +24,11 @@
         <input type="number"/>
     </div>
 
+    <br>
+    <p>...........................................</p>
+    <p>machine learning pushes</p>
+    <button ng-click="mp()">machine learning push </button>
+
     <script>
         angular.module('signInApp', [])
             .controller('SignInController', ['$scope', '$http', function ($scope, $http) {
@@ -34,6 +39,19 @@
                      $http({
                         method: 'POST',
                         url: '/api/sendPushes/',  // Update this URL to your backend endpoint
+
+                        data: {username : $scope.username}
+                    }).then(function (response) {
+                        $scope.events = response.data.events;
+                        console.log($scope.events)
+                    }, function (error) {
+                        $scope.responseMessage = "An error occurred.";
+                    });
+                }
+                $scope.mp = function () {
+                   $http({
+                        method: 'POST',
+                        url: 'api/trainedPush/',  // Update this URL to your backend endpoint
 
                         data: {username : $scope.username}
                     }).then(function (response) {
