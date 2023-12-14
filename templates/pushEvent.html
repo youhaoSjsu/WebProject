@@ -28,6 +28,15 @@
     <p>...........................................</p>
     <p>machine learning pushes</p>
     <button ng-click="mp()">machine learning push </button>
+    <div ng-repeat="event in machineLearningEvents track by $index">
+        <p>{% verbatim %} {{event.event_id}} {% endverbatim %}</p>
+        <p>{% verbatim %}{{event.name}} {% endverbatim %}</p>
+        <p>{% verbatim %} {{event.description}} {% endverbatim %}</p>
+        <p>{% verbatim %} {{event.category}} {% endverbatim %}</p>
+        <p>rate it (0-5) </p>
+        <input type="number"/>
+    </div>
+
 
     <script>
         angular.module('signInApp', [])
@@ -35,6 +44,7 @@
                 $scope.formData = {};
                 $scope.username='';
                 $scope.events = [];
+                $scope.machineLearningEvents = [];
                 $scope.getPushes =function (){
                      $http({
                         method: 'POST',
@@ -55,7 +65,7 @@
 
                         data: {username : $scope.username}
                     }).then(function (response) {
-                        $scope.events = response.data.events;
+                         $scope.machineLearningEvents = response.data.events;
                         console.log($scope.events)
                     }, function (error) {
                         $scope.responseMessage = "An error occurred.";
